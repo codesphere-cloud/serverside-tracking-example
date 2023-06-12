@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SST Example</title>
+</head>
+<body>
+<div class="container">
+</div>
+<script>
+
+    const fp = () => import('https://openfpcdn.io/fingerprintjs/v3')
+        .then(FingerprintJS => FingerprintJS.load()).then(fp => fp.get()).then(r => r.visitorId);
+    const forEachProperty = (object, looper) => {
+        for (const key in object) {
+            looper(key, object[key]);
+        }
+    };
+
+    const getUrlParams = (url) => {
+        const params = {};
+        const parser = document.createElement('a');
+        parser.href = url;
+        const query = parser.search.substring(1);
+        const vars = query.split('&');
+        for (let i = 0; i < vars.length; i++) {
+            const pair = vars[i].split('=');
+            params[pair[0]] = decodeURIComponent(pair[1]);
+        }
+        return params;
+    };
+
+    const track = (event, visitor) => fetch('/track', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        method: 'POST', body: JSON.stringify({event, ...visitor})
+    }).catch(console.log);
+
+    (async () => {
+        const visitor = {
+            ...getUrlParams(location.href),
+            id: fp(),
+            referrer: document.referrer,
+            url: location.href,
+            userAgent: navigator.userAgent
+        }
+        document.querySelector('.container').innerHTML(JSON.stringify(visitor));
+    })();
+</script>
+</body>
+</html>
